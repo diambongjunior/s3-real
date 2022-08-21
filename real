@@ -1,0 +1,76 @@
+FraudSight US Bucket and Role
+
+Created by Marcus Ahle
+Aug 10, 20221 min read
+2 people viewed
+Background
+Allow FraudSight report delivery so that Pazien can process the reports
+
+
+
+Assumptions
+File will be dropped of to us by the FraudSight Team. We must provision access for them as well as provision the infrastructure needed for them to drop off the files.
+
+Solution Assumptions
+Utilize an s3 bucket that Pazien will provision for the FraudSight team to drop files into. 
+
+FraudSight team will gain access to s3 bucket via AWS STS Role Assumption (aka - we also need an IAM role for this)
+
+All AWS resources will be provisioned by a Cloudformation Stack
+
+S3 Buckets needed bucket level encryption
+
+S3 Role needs actions to list and drop off files to said bucket
+
+Need to provide ability for Role assumption via STS service.
+
+We will need ARN of FraudSight AWS user
+
+ARN should be a parameter that is passed in to the cloudformation stack
+
+Need separate stacks for Staging vs Production
+
+hint hint - Ensure environment is a parameter that can be passed in and applied to the different resources
+
+
+
+
+Tasks
+
+
+
+Create Cloudformation Stack
+
+Parameters
+
+VPCName - aka environment
+
+ARN for FraudSight user utilizing the role assumption
+
+Resources
+
+S3 Bucket
+
+Encryption
+
+Bucketname
+
+Role with permissions to s3 bucket
+
+Actions
+
+Put object
+
+List objects
+
+List Bucket
+
+Role Assumption ability
+
+Pass in ARN that will be assuming the role
+ 
+ 
+ 
+
+Questions / Other
+Which type of bucket encryption should be utilize? Default S3? Custom KMS?
