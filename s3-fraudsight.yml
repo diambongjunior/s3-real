@@ -1,0 +1,83 @@
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    #DeletionPolicy: Retain
+    Properties:
+      BucketName: 'fraudsight-us'
+      #BucketEncryption: 
+      #NotificationConfiguration: 
+      #VersioningConfiguration:     
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": "*",
+                  "Action": ["s3:GetObject", "s3:ListBucket", "s3:PutObject"],
+                  "Resource": ["arn:aws:s3:::fraudsight-us", "arn:aws:s3:::fraudsight-us/*"]       
+                }
+            ]
+          }
+      Bucket:
+          Ref: S3Bucket
+                         
+  S3Role:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": 
+                          {
+                            "Service": [ "s3.amazonaws.com"]
+                          },
+                      "Action": ["sts:AssumeRole"]
+                    }
+                ]
+              }
+      Description: "Allow users access to an S3 bucket"
+      RoleName: "TBD"
+       #Tags: 
+          # - Tag
+
+  S3RolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+        PolicyDocument: 
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                 {
+                   "Effect": "Allow",
+                   "Action": [ "s3:Get*", "s3:List*" ],
+                   "Resource": "*"
+                 },
+
+                 {
+                   "Effect": "Allow",
+                   "Action":  [ "s3:PutObject" ],
+                   "Resource": [ "arn:aws:s3:::${S3Bucket}/*"]
+                 }
+               ]
+             }
+        PolicyName: 'TBD'
+        Roles: 
+          - "TBD"
+
+  S3AccessPoint:
+    Type: AWS::S3::AccessPoint
+    Properties:
+      Bucket:
+        Ref: S3Bucket
+      Name: TBD
+      VpcConfiguration:
+        VpcId: 'TBD'
+    
