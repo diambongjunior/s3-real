@@ -1,0 +1,177 @@
+#AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    Properties:
+      BucketName: 'jr-mrbuckbuckbucket3'
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      # ReplicationConfiguration": 
+      #   "Role": {
+      #       "Fn::GetAtt": [
+      #           "S3BucketRole",
+      #           "Arn"
+      #       ]
+      #   }
+  
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": [
+                    "s3:ListBucket"
+                ],
+                "Resource": [
+                  "Fn::Join": [
+                      "",
+                      [
+                          "arn:aws:s3:::",
+                          {
+                            "Ref": "S3Bucket"
+                          }
+                      ]
+                  ]
+                ]
+              },
+              {
+                "Effect": "Allow",
+                "Principal": "*",
+                "Action": [
+                    "s3:PutObject"
+                ],
+                "Resource": [
+                  "Fn::Join": [
+                      "",
+                      [
+                          "arn:aws:s3:::",
+                          {
+                            "Ref": "S3Bucket"
+                          },
+                          "/*"
+                      ]
+                  ]
+                ]
+              }
+            ]
+          }
+      Bucket:
+          Ref: S3Bucket
+
+  S3BucketRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+              {
+                "Effect": "Allow",
+                "Principal": 
+                    {
+                      "Service": [ "s3.amazonaws.com"]
+                    },
+                "Action": ["sts:AssumeRole"]
+              }
+          ]
+        }
+      Description: "Allow users access to an S3 bucket"
+      #ManagedPolicyArns: 
+        # - String
+      #MaxSessionDuration: Integer
+      #Path: String
+      #PermissionsBoundary: String
+      # Policies: 
+      #     - 'IAM-S3Bucket-access'
+          # - {
+          #     "Version": "2012-10-17",
+          #     "Statement": [
+          #       {
+          #         "Effect": "Allow",
+          #         "Action": [ "s3:Get*", "s3:List*" ],
+          #         "Resource": "*"
+          #       },
+
+          #       {
+          #         "Effect": "Allow",
+          #         "Action":  [ "s3:PutObject" ],
+          #         "Resource": [ "arn:aws:s3:::${S3Bucket}/*"]
+          #       }
+          #     ]
+          #   }
+      # RoleName: "mrbuckbuckbucket"
+       #Tags: 
+          # - Tag
+  
+  S3BucketRolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+        PolicyDocument: 
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                 {
+                   "Effect": "Allow",
+                   "Action": [ "s3:Get*", "s3:List*" ],
+                   "Resource": "*"
+                 },
+
+                 {
+                   "Effect": "Allow",
+                   "Action":  [ "s3:PutObject" ],
+                   "Resource": [ "arn:aws:s3:::${S3Bucket}/*"]
+                 }
+               ]
+             }
+        PolicyName: 'IAM-S3Bucket-access'
+        Roles: [
+          {
+              "Ref": "S3BucketRole"
+          }
+        ]
+
+  #VPC:
+    #Type: AWS::EC2::VPC
+    #Properties:
+      #CidrBlock: 10.0.0.0/16
+    #VpcConfiguration: 
+        #VpcId: 'vpc-0d1051208f83c54ce'
+  S3AccessPoint:
+    Type: AWS::S3::AccessPoint
+    Properties:
+      Bucket:
+        Ref: S3Bucket
+      Name: my-access-point
+      VpcConfiguration:
+        VpcId: 'vpc-0d1051208f83c54ce'
+      #PublicAccessBlockConfiguration:
+        #BlockPublicAcls: true
+        #IgnorePublicAcls: true
+        #BlockPublicPolicy: true
+        #RestrictPublicBuckets: true
+
+Outputs:
+  S3AccessPointArn:
+    Value:
+      Ref: S3AccessPoint
+    Description: ARN of the sample Amazon S3 access point.
+  S3BucketRolePolicyArn:
+    Value: !Ref S3BucketRole
+    Description: S3 Bucket Role Policy Arn.
+  S3BucketRoleArn:
+    Value: !Ref S3BucketRole
+    Description: S3 Bucket Role Arn.
+  S3BucketPolicyArn:
+    Value: !Ref S3BucketPolicy
+    Description: S3 Bucket Policy.
+  BucketName:
+    Value: !Ref S3Bucket
+    Description: Name of the sample Amazon S3 bucket with a logging configuration.
