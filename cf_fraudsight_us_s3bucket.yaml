@@ -1,0 +1,100 @@
+
+#AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  Env:
+    Type: String
+    Description: The environment you're deploying to.
+    AllowedValues:
+      - Stg1
+      - Stg2
+      - Stg3
+      - Stg4
+      - Prod
+
+  UserARN:
+    Type: String
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub "Fraudsight-US-Bucket-${Env}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+    
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+          Version: '2012-10-17'
+          Statement: 
+            - Action:
+                  - 's3:ListBucket'
+              Effect: Allow
+              Principal: "*"
+              Resource: !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref S3Bucket
+            - Action:
+                  - 's3:PutObject'
+              Effect: Allow
+              Principal: "*"
+              Resource: !Join
+                - ''
+                - - 'arn:aws:s3:::'
+                  - !Ref S3Bucket
+                  - '/*'
+      Bucket: !Ref S3Bucket
+
+  S3BucketRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 'Fraudsight-s3-access-role-${Env}'
+      AssumeRolePolicyDocument: 
+          Version: '2012-10-17'
+          Statement: 
+            - Effect: Allow
+              Principal:  
+                  AWS: 
+                    - "${UserARN}"
+              Action:
+                  - 'sts:AssumeRole'
+      Description: "Allow users to access the S3 bucket"
+  
+  S3BucketRolePolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+        PolicyDocument: 
+            Version: '2012-10-17'
+            Statement:
+                - Effect: Allow
+                  Action: 
+                    - 's3:Get*'
+                    - 's3:List*'
+                  Resource: "*"
+
+                - Effect: Allow
+                  Action: 
+                    - 's3:PutObject'
+                  Resource: 'arn:aws:s3:::${S3Bucket}/*'
+
+        PolicyName: !Sub 'IAM-fraudsight-us-S3Bucket-access-${Env}'
+        Roles: !Ref S3BucketRole
+      
+Outputs:
+  S3BucketRolePolicyArn:
+    Value: !Ref S3BucketRole
+    Description: 'S3 Bucket Role Policy Arn.'
+  S3BucketRoleArn:
+    Value: !Ref S3BucketRole
+    Description: 'S3 Bucket Role Arn.'
+  S3BucketPolicyArn:
+    Value: !Ref S3BucketPolicy
+    Description: 'S3 Bucket Policy Arn.'
+  BucketName:
+    Value: !Ref S3Bucket
+    Description: 'Name of the S3 bucket.'
